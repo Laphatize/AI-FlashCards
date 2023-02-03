@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
+  <style>
+    .lds-ripple {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-ripple div {
+  position: absolute;
+  border: 4px solid rgb(0, 76, 255);
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
+  0% {
+    top: 36px;
+    left: 36px;
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  4.9% {
+    top: 36px;
+    left: 36px;
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  5% {
+    top: 36px;
+    left: 36px;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    top: 0px;
+    left: 0px;
+    width: 72px;
+    height: 72px;
+    opacity: 0;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  
+  <div class="min-h-full">
+
+    <div class="py-10">
+      <header>
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">AI Flashcard Creator</h1>
+        </div>
+      </header>
+      <main>
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div class="px-4 py-8 sm:px-0">
+            <div class="rounded-lg border-4 border-dashed border-gray-200">
+             
+<div class=" items-center justify-center w-full px-4 py-6">
+<div id="uploadbox" class="hidden mx-auto text-center">
+    <h1 class="text-2xl mx-auto text-center">Uploaded Pictures</h1>
+    <br>
+  <img class="mx-auto text-center border border-gray-600 border-4" width="300" src="" id="upload">
+  <br>
+  <span class="bg-gray-700 text-white text-xl rounded-full px-4 mt-4">1/1</span>
+  </div>
+
+
+  <label id="image-box" for="image-file" class="flex flex-col items-center justify-center w-full h-64 border-gray-400 border rounded-lg hover:bg-gray-200 rounded-lg cursor-pointer bg-gray-50   bg-gray-100 border-gray-600 border-gray-500 ">
+      <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+          <p class="mb-2 text-sm text-gray-500 text-gray-400"><span class="font-semibold">Click to upload</span></p>
+          <p class="text-xs text-gray-500 text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+      </div>
+      <input id="image-file" type="file" class="hidden" />
+  </label>
+
+  <br><br>
+<div class="mx-auto text-center grid grid-cols-2 gap-x-4">
+
+
+  <div class="w-full" >
+    <h1 class="text-left text-xl font-semibold mb-2 flex align-center">Image to Text (OCR)  
+    </h1>
+    <div class="lds-ripple" style="display:none;" id="resultload"><div></div><div></div></div>
+  <textarea  id="result" class="hidden px-4 py-3 bg-gray-100 w-full border-gray-400 border rounded-lg" rows="10" cols="30"></textarea>
+</div>
+<div class="w-full" >
+  <h1 class="text-left text-xl font-semibold mb-2">Text to Flashcards (AI)</h1>
+  <div class="lds-ripple" style="display:none;"  id="result2load"><div></div><div></div></div>
+
+  <textarea id="result2" class="hidden px-4 py-3  w-full bg-gray-100 border-gray-400 border rounded-lg"  rows="10" cols="30"></textarea></div>
+  </div>
+
+
+</div> 
+
+        
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="mx-auto text-center">
+          <h1>&copy; Pranav Ramesh 2023 </h1>
+      </footer>
+    </div>
+
+  </div>
+
+  <script>
+
+    const imageFile = document.getElementById("image-file");
+    const result = document.getElementById("result");
+
+    imageFile.addEventListener("change", function (event) {
+      document.getElementById("resultload").style.display = "block";
+      document.getElementById("result2load").style.display = "block";
+
+      
+
+      document.getElementById("uploadbox").classList.remove("hidden");
+
+      const file = event.target.files[0];
+      console.log(file)
+      var img = document.getElementById("upload");
+      img.src = URL.createObjectURL(file);
+      document.getElementById("image-box").style.display = "none";
+      document.getElementById("image-file").style.display = "none";
+
+      
+      Tesseract.recognize(file)
+        .then(function (data) {
+          console.log(data.data.text)
+          result.value = data.data.text;
+          document.getElementById("result").classList.remove("hidden");
+          document.getElementById("resultload").style.display = "none";
+          generateCards(data.data.text);
+
+
+        });
+    });
+
+    function generateCards(text) {
+      const cards = text.split("\n\n");
+      console.log(cards);
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          console.log(this.responseText);
+
+          
+          var input = this.responseText;
+          
+
+    
+          document.getElementById("result2").classList.remove("hidden");
+          document.getElementById("result2load").style.display = "none";
+          document.getElementById("result2").value = this.responseText;
+        }
+      };
+
+      xhttp.open("GET", "http://localhost:3004/openai?notes=" + text, true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.send(JSON.stringify(cards));
+
+
+    }
+  </script>
+
+</body>
+
+
+</html>
